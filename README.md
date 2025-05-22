@@ -1,13 +1,11 @@
-# CoastVision
+# FogVision
 [![Last Commit](https://img.shields.io/github/last-commit/jnicolow/FogVision)](
 https://github.com/jnicolow/FogVision/commits/)
 ![GitHub issues](https://img.shields.io/github/issues/jnicolow/FogVision)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/y/jnicolow/FogVision)
 
-FogVision is an open-source Python framework for classifying mountain trail camera imagery by fog presense.
-
-CoastVision is inspired by [CoastSat](https://github.com/kvos/CoastSat) and [CoastSat.PlanetScope](https://github.com/ydoherty/CoastSat.PlanetScope) with the key differences being CoastVision's inclusion of an API to download PlanetScope imagery and how shoreline contours are extracted. CoastSat.PlanetScope classifies each pixel as white-water, water, sand, or other land; then using a thresholding algorithm such as peak fraction on the normalized difference water index. CoastVision classifies pixels as either land or water and then uses the marching squares algorithm to delineate a shoreline between the land and water classes.
+FogVision is an open-source Python framework for classifying mountain trail camera imagery by fog presence.
 
 <img src="media/stages_plot.jpg" alt="Stages Plot">
 
