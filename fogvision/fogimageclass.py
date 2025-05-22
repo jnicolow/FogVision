@@ -72,6 +72,8 @@ class FogImage(CamImage):
         if self.nocturnal is None: 
             if 'diurnal' in filepath: self.nocturnal = 0 # if there is diunral in the path then it is daytime which is class zero
             elif 'nocturnal' in filepath: self.nocturnal = 1
+            else:
+                self.get_is_nocturnal()
         
         self.fog_val = fog_val
 
@@ -311,9 +313,11 @@ class FogImage(CamImage):
         return self.fog_val
 
 
-    def plot_image(self, plot_crop=True):
+    def plot_image(self, plot_crop=False):
         image_data = self.to_numpy()
         plt.imshow(image_data)
+
+        plt.title(f'{os.path.basename(self.filepath)}: \n {self.nocturnal=}, {self.fog_val=}')
 
         if plot_crop:
             # plot red box of crop
