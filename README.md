@@ -7,7 +7,6 @@ https://github.com/jnicolow/FogVision/commits/)
 
 FogVision is an open-source Python framework for classifying mountain trail camera imagery by fog presence. First, image embeddings are computed using a pretrained ResNet50 model, and then a classification head was trained on ~40k images from 30 sites (separate classification head for diurnal and nocturnal imagery).
 
-<img src="media/classif_example.png" alt="Image Classification Example">
 
 
 ## 1. Installation<a name="introduction"></a>
@@ -18,4 +17,9 @@ conda env create -f fogvision.yml
 conda activate fogvision
 ```
 
+## 2. Run through example notebook
 After successfully creating the environment, run through `example_notebook.ipynb` using the `fogvision` environment. This notebook provides example image classification code.
+
+<img src="media/classif_example.png" alt="Image Classification Example">
+
+
