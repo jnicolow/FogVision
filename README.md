@@ -11,11 +11,11 @@ FogVision is an open-source Python framework for classifying mountain trail came
 
 
 ## 1. Installation<a name="introduction"></a>
-Use `coastvision.yml` to create conda environment. This will take a few minutes.
+Use `fogvision.yml` to create conda environment. This will take a few minutes.
 ```
-cd path/to/CoastVision
-conda env create -f coastvision.yml
-conda activate coastvision
+cd path/to/FogVision
+conda env create -f fogvision.yml
+conda activate fogvision
 ```
 
 After successfully creating the environment, run through `example_notebook.ipynb` using the `fogvision` environment. This notebook provides example image classification code.
