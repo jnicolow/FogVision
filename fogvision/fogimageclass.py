@@ -317,7 +317,7 @@ class FogImage(CamImage):
         image_data = self.to_numpy()
         plt.imshow(image_data)
 
-        plt.title(f'{os.path.basename(self.filepath)}: \n {self.nocturnal=}, {self.fog_val=}')
+        plt.title(f'{str(self.timestamp)}, {os.path.basename(self.filepath)}: \n {self.nocturnal=}, {self.fog_val=}')
 
         if plot_crop:
             # plot red box of crop
