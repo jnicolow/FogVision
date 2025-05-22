@@ -7,21 +7,7 @@ https://github.com/jnicolow/FogVision/commits/)
 
 FogVision is an open-source Python framework for classifying mountain trail camera imagery by fog presence.
 
-<img src="media/stages_plot.jpg" alt="Stages Plot">
-
-
-### Table of Contents
-
-- [Installation](#installation)
-- [PlanetScope API](#api)
-- [Image Co-registration](#coreg)
-- [Shoreline Extraction](#sds)
-   - [Image Segmentation](#seg)
-   - [Shoreline Extraction](#shoreline)
-   - [Transect Intersection](#intersect)
-- [Tidal Corrections](#tide)
-- [QAQC](#qaqc)
-
+<img src="media/classif_example.png" alt="Image Classification Example">
 
 
 ## 1. Installation<a name="introduction"></a>
@@ -32,9 +18,4 @@ conda env create -f coastvision.yml
 conda activate coastvision
 ```
 
-After successfully creating the environment run through `example_notebook.ipynb` using the `coastvision` environment. This notebook provides code and an explanation of the following steps. Given an area of interest and a timeframe of interest, you can download imagery and extract shorelines from your own site all from this notebook.
-
-## 2. PlanetScope API<a name="api"></a>
-<a href='https://developers.planet.com/docs/data/planetscope/'>PlanetScope</a> is a satellite constellation operated by <a href='https://www.planet.com/'>Planet Labs Inc.</a> The PlanetScope constellation is made up of roughly 130 satellites, capable of imaging the entire land surface of earth with daily revisit times and 3 meter spatial resolution. The imagery has four bands red, green, blue, and near-infrared. 
-
-Given an API key, an area of interest polygon, and a timeframe, applicable imagery will be downloaded from Planet. See section 1 "Download PlanetScope Imager" in `example_notebook.ipynb` for more info.
+After successfully creating the environment, run through `example_notebook.ipynb` using the `fogvision` environment. This notebook provides code and an explanation of the following steps. 
