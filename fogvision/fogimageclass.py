@@ -170,8 +170,10 @@ class FogImage(CamImage):
             if self.crop_size is None and crop_size is None:
                 # find largest square in image
                 min_size = min(self.image_size())
-                self.crop_size = int(np.floor(min_size / 32)) * 32 # take largest square with size divisable by 32
+                self.crop_size = int(np.floor(min_size / 32)) * 32 # take largest square with size divisable by 32                
                 # find 32 devisable of it
+            if crop_size is None:
+                crop_size = self.crop_size # NOTE just because the work around for if crop is None we use crop_size instead of self.crop-size for this fucntion
         else: 
             # NOTE dont want to reset self.crop_size just temp make crop size the whole image so that this function returns the entire image
             crop_size = max(self.image_size()) # just a hack to get he largest square crop of the image
