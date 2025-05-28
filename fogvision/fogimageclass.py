@@ -164,30 +164,34 @@ class FogImage(CamImage):
         return (pad_left, pad_top, pad_right, pad_bottom)
     
 
-    def to_tensor(self, random_crop=False, crop_size=None, unsqueeze:bool=False):
-        if not crop_size is None: self.crop_size = crop_size # the crop_size can be defined at this stage to 
-        if self.crop_size is None and crop_size is None:
-            # find largest square in image
-            min_size = min(self.image_size())
-            self.crop_size = int(np.floor(min_size / 32)) * 32 # take largest square with size divisable by 32
-            # find 32 devisable of it
+    def to_tensor(self, crop:bool=True, crop_size:int=None, random_crop:bool=False, unsqueeze:bool=False):
+        if crop:
+            if not crop_size is None: self.crop_size = crop_size # the crop_size can be defined at this stage to 
+            if self.crop_size is None and crop_size is None:
+                # find largest square in image
+                min_size = min(self.image_size())
+                self.crop_size = int(np.floor(min_size / 32)) * 32 # take largest square with size divisable by 32
+                # find 32 devisable of it
+        else: 
+            # NOTE dont want to reset self.crop_size just temp make crop size the whole image so that this function returns the entire image
+            crop_size = max(self.image_size()) # just a hack to get he largest square crop of the image
 
         # Padding to ensure image is at least crop_size in both dimensions
         padding_transform = transforms.Lambda(
             lambda img: transforms.functional.pad(
                 img,
-                padding=self._get_padding(self.crop_size),
+                padding=self._get_padding(crop_size),
                 fill=0,
                 padding_mode='constant'
             )
         )
 
-        crop = TopLeftCornerCrop(self.crop_size)
 
         if random_crop:
-            crop = transforms.RandomCrop(self.crop_size)
+            crop = transforms.RandomCrop(crop_size)
         else:
-            crop = transforms.CenterCrop(self.crop_size)       # crop to crop_sizexcrop_size (ResNet input size) crops the center of the image
+            crop = transforms.CenterCrop(crop_size)       # crop to crop_sizexcrop_size (ResNet input size) crops the center of the image
+            # crop = TopLeftCornerCrop(self.crop_size)
             # crop = TopCrop(self.crop_size)
 
 
@@ -215,7 +219,7 @@ class FogImage(CamImage):
         with torch.no_grad():
             # Move the input tensor to the device
             self.device = str(next(embedding_model.parameters()).device) # this way to_tensor() puts on same device as the embedding model
-            embedding = embedding_model(self.to_tensor(random_crop=random_crop))
+            embedding = embedding_model(self.to_tensor(random_crop=random_crop, unsqueeze=True))
             embedding = embedding.squeeze(0).cpu().numpy()  # Correctly handle the shape
         self.embedding = embedding
         return embedding
@@ -239,14 +243,14 @@ class FogImage(CamImage):
                     embedding = embedding.reshape(1, -1)  # Reshape if it's a single sample
                 self.embedding = embedding
             # now the embedding model is set up so you can do a prediction
-            
             if isinstance(model, torch.nn.Module):
                 model.eval()
                 with torch.no_grad():
                     embedding_tensor = torch.tensor(self.embedding, dtype=torch.float32).to(self.device)
                     logits = model(embedding_tensor) # the second output is the embedding
-                    probabilities = torch.sigmoid(logits) # NOTE dont really care about probabilities for now maybe use them later on
-                    self.probabilities = probabilities
+                    # self.probabilities = torch.sigmoid(logits) # NOTE dont really care about probabilities for now maybe use them later on
+                    self.probabilities = torch.softmax(logits, dim=1)[0] # NOTE if two output nodes use softmax not sigmoid
+
                     self.logits = logits
                     # Convert probabilities to binary prediction (0 or 1)
                     self.fog_val = int(torch.argmax(logits, dim=1).item())
@@ -258,10 +262,13 @@ class FogImage(CamImage):
             model.eval()
             with torch.no_grad():
                 logits, _ = model(self.to_tensor()) # the second output is the embedding
-                probabilities = torch.sigmoid(logits)
-            
+                # self.probabilities = torch.sigmoid(logits)
+                self.probabilities = torch.softmax(logits, dim=1)[0] # NOTE if two output nodes use softmax not sigmoid
+                
                 # Convert probabilities to binary prediction (0 or 1)
-                self.fog_val = int((probabilities > 0.5).float())
+                self.fog_val = int((self.probabilities > 0.5).float())
+
+        
         return self.fog_val
 
 
@@ -275,11 +282,13 @@ class FogImage(CamImage):
         model.eval()
         embedding_model.eval()
 
-        img_tensor = self.to_tensor().to(self.device)  # shape: (C, H, W)
+        img_tensor = self.to_tensor(crop=False).to(self.device)  # shape: (C, H, W) NOTE dont crop because we want to take mutiple crops of the image
         _, H, W = img_tensor.shape
         crop_size = self.crop_size or min(H, W)
 
         crops = []
+ 
+        print(range(0, H, crop_size))
 
         for top in range(0, H, crop_size):
             for left in range(0, W, crop_size):
@@ -290,12 +299,20 @@ class FogImage(CamImage):
                 pad_bottom = crop_size - (h_end - top)
                 pad_right = crop_size - (w_end - left)
 
+                # NOTE for some reason this is swapped????
+                # pad_right = crop_size - (h_end - top)
+                # pad_bottom = crop_size - (w_end - left)
+
                 crop = img_tensor[:, top:h_end, left:w_end]
                 if pad_bottom > 0 or pad_right > 0:
-                    crop = F.pad(crop, [0, pad_right, 0, pad_bottom])  # [left, right, top, bottom]
+
+                    crop = F.pad(crop, (0, 0, pad_right, pad_bottom), 0)  # NOTE the API for this function is very weird but this tuple seems to work
+                assert crop.shape[1] == crop_size and crop.shape[2] == crop_size, f"Crop shape mismatch: {crop.shape}"
+
+
 
                 crops.append(crop)
-
+        print(len(crops))
         crops_tensor = torch.stack(crops).to(self.device)  # shape: (num_crops, C, crop_size, crop_size)
 
         with torch.no_grad():
@@ -304,11 +321,20 @@ class FogImage(CamImage):
 
             max_logit, _ = torch.max(logits, dim=0)  # max over crops
             self.logits = max_logit
-            self.probabilities = torch.sigmoid(max_logit)
-            print(self.probabilities)
-            print(int(torch.argmax(self.probabilities).item()))
+            # self.probabilities = torch.sigmoid(max_logit) # NOTE sigmoid should be used if only one output node
 
-            self.fog_val = int(torch.argmax(self.probabilities).item())
+            probabilities = torch.softmax(logits, dim=1)     # shape: (num_crops, 2)
+            fog_probs = probabilities[:, 1]                  # get prob for fog class
+            max_fog_prob, _ = torch.max(fog_probs, dim=0)
+
+            self.logits = logits
+            self.probabilities = torch.tensor([1 - max_fog_prob, max_fog_prob])
+            self.fog_val = int(max_fog_prob > 0.5)
+            
+            
+            # print(int(torch.argmax(self.probabilities).item()))
+
+            # self.fog_val = int(torch.argmax(self.probabilities).item())
 
         return self.fog_val
 
@@ -316,13 +342,13 @@ class FogImage(CamImage):
     def plot_image(self, plot_crop=False):
         image_data = self.to_numpy()
         plt.imshow(image_data)
-
-        plt.title(f'{str(self.timestamp)}, {os.path.basename(self.filepath)}: \n {self.nocturnal=}, {self.fog_val=}')
+        plt.title(f'{str(self.timestamp)}, {os.path.basename(self.filepath)}: \nnocturnal={self.nocturnal}, fog_val={self.fog_val}\nfog={self.probabilities[1]*100:.2f}%, clear={self.probabilities[0]*100:.2f}%')
 
         if plot_crop:
             # plot red box of crop
             height, width = image_data.shape[:2]
             box_size = self.crop_size
+            print(box_size)
             box_x = (width - box_size) // 2  # Top-left x-coordinate
             box_y = (height - box_size) // 2  # Top-left y-coordinate
             rect = patches.Rectangle(
