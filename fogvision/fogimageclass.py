@@ -341,10 +341,11 @@ class FogImage(CamImage):
         return self.fog_val
 
 
-    def plot_image(self, plot_crop=False):
+    def plot_image(self, plot_crop=False, save_path=None):
         image_data = self.to_numpy()
-        plt.imshow(image_data)
-        plt.title(f'{str(self.timestamp)}, {os.path.basename(self.filepath)}: \nnocturnal={self.nocturnal}, fog_val={self.fog_val}\nfog={self.probabilities[1]*100:.2f}%, clear={self.probabilities[0]*100:.2f}%')
+        fig, ax = plt.subplots()
+        ax.imshow(image_data)
+        ax.set_title(f'{str(self.timestamp)}, {os.path.basename(self.filepath)}: \nnocturnal={self.nocturnal}, fog_val={self.fog_val}\nfog={self.probabilities[1]*100:.2f}%, clear={self.probabilities[0]*100:.2f}%')
 
         if plot_crop:
             # plot red box of crop
@@ -361,7 +362,19 @@ class FogImage(CamImage):
                 edgecolor='red', # Color
                 facecolor='none' # Transparent fill
             )
-            plt.gca().add_patch(rect)
+            ax.add_patch(rect)
+
+        if getattr(self, "fog_val", 0) == 1:
+            ax.text(
+                40, 130, "FOG DETECTED",
+                fontsize=16, color="red", weight="bold",
+                bbox=dict(facecolor='white', alpha=0.6, edgecolor='none')
+            )
 
         # plt.title(f"Timestamp: {self.timestamp}\nDoN: {self.nocturnal}\nFog Value: {self.fog_val}\nproba: {self.probabilities}")
-        plt.show()
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            plt.close(fig)
+            print(f"Image saved to {save_path}")
+        else:
+            plt.show()
