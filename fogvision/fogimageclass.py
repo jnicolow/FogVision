@@ -345,6 +345,8 @@ class FogImage(CamImage):
         image_data = self.to_numpy()
         fig, ax = plt.subplots()
         ax.imshow(image_data)
+        ax.axis('off')  # Hide axes
+
         ax.set_title(f'{str(self.timestamp)}, {os.path.basename(self.filepath)}: \nnocturnal={self.nocturnal}, fog_val={self.fog_val}\nfog={self.probabilities[1]*100:.2f}%, clear={self.probabilities[0]*100:.2f}%')
 
         if plot_crop:
