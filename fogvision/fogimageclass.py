@@ -129,7 +129,7 @@ class FogImage(CamImage):
 
 
     def get_is_nocturnal(self):
-        # could use a model if neccesay
+        # NOTE the current aproach is just to check if the center of the image is grayscale (center because there may be color in the image tag/watermark)
         # model.eval()
         # with torch.no_grad():
         #     logits, _ = model(self.to_tensor()) # the second output is the embedding
@@ -144,7 +144,7 @@ class FogImage(CamImage):
         center_x, center_y = width // 2, height // 2
         half_size = 50
         center_region = image_np[center_y-half_size:center_y+half_size, center_x-half_size:center_x+half_size]
-        # check if center region is gray
+        # check if center region is gray (center because there may be color in the image legend/watermark/key)
         if np.all(center_region[:, :, 0] == center_region[:, :, 1]) and np.all(center_region[:, :, 1] == center_region[:, :, 2]):
             # image is grascale
             self.nocturnal = 1
@@ -156,6 +156,9 @@ class FogImage(CamImage):
     
 
     def _get_padding(self, crop_size):
+        """
+        Pad the image to the desired crop_size
+        """
         width, height = self.size
         pad_left = max((crop_size - width) // 2, 0)
         pad_top = max((crop_size - height) // 2, 0)
@@ -173,7 +176,7 @@ class FogImage(CamImage):
                 self.crop_size = int(np.floor(min_size / 32)) * 32 # take largest square with size divisable by 32                
                 # find 32 devisable of it
             if crop_size is None:
-                crop_size = self.crop_size # NOTE just because the work around for if crop is None we use crop_size instead of self.crop-size for this fucntion
+                crop_size = self.crop_size # NOTE just because the work around for if crop is None we use crop_size instead of self.crop-size for this fucntion 
         else: 
             # NOTE dont want to reset self.crop_size just temp make crop size the whole image so that this function returns the entire image
             crop_size = max(self.image_size()) # just a hack to get he largest square crop of the image
@@ -193,7 +196,7 @@ class FogImage(CamImage):
             crop = transforms.RandomCrop(crop_size)
         else:
             crop = transforms.CenterCrop(crop_size)       # crop to crop_sizexcrop_size (ResNet input size) crops the center of the image
-            # crop = TopLeftCornerCrop(self.crop_size)
+            # crop = TopLeftCornerCrop(self.crop_size) # NOTE this is just for testing with specific sites
             # crop = TopCrop(self.crop_size)
 
 
@@ -299,11 +302,9 @@ class FogImage(CamImage):
 
                 # If it's a small remainder patch, pad it up to crop_size
                 pad_bottom = crop_size - (h_end - top)
-                pad_right = crop_size - (w_end - left)
+                pad_right = crop_size - (w_end - left) # Note this may of been swapped at one point
 
-                # NOTE for some reason this is swapped????
-                # pad_right = crop_size - (h_end - top)
-                # pad_bottom = crop_size - (w_end - left)
+                
 
                 crop = img_tensor[:, top:h_end, left:w_end]
                 if pad_bottom > 0 or pad_right > 0:
