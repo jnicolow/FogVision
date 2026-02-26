@@ -63,6 +63,15 @@ class PrecomputedEmbeddingDataset(Dataset):
     
 
 
+def get_balanced_train_indices(train_pool_indices, dataset, n):
+    """Take n indices with balanced fog/clear from the train pool."""
+    fog_idx = [i for i in train_pool_indices if dataset[i][1] == 1]
+    clear_idx = [i for i in train_pool_indices if dataset[i][1] == 0]
+    
+    n_per_class = n // 2
+    # Take first n_per_class from each class
+    selected = fog_idx[:n_per_class] + clear_idx[:n_per_class]
+    return selected
 
 
 def get_balanced_test_indices(dataset, n_per_class=10):
