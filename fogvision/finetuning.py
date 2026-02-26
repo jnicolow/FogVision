@@ -1,5 +1,5 @@
 """
-This module contains code to create and image class
+Code to assist fine tuning fog classif models for new/specific sites
 
 Author: Joel Nicolow, Information and Computer Science, University of Hawaii at Manoa (Febuary 24, 2024)
 """
