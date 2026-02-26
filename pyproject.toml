@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fogvision"
+version = "0.1.0"
+description = "Fog prediction from images using deep learning"
+authors = [{name = "Joel Nicolow"}]
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+  "torch>=2.5.0",
+  "torchvision>=0.20.0",
+  "torchaudio>=2.5.0",
+  "numpy>=2.2",
+  "pandas>=2.2",
+  "scipy>=1.15",
+  "scikit-learn>=1.6",
+  "matplotlib>=3.10",
+  "seaborn>=0.13",
+  "pillow>=11.0",
+  "joblib>=1.4",
+  "numexpr>=2.10",
+  "threadpoolctl>=3.5",
+  "pyyaml>=6.0",
+  "requests>=2.32",
+]
+
+[project.scripts]
+fogvision = "fogvision.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["fogvision*"]
+
+[tool.setuptools.package-data]
+"fogvision.models" = ["*.pkl"]
