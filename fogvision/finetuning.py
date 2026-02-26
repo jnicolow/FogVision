@@ -16,7 +16,7 @@ import pandas as pd
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, Subset
-from sklearn.metrics import roc_auc_score, accuracy_score, precision_score, f1_score
+from sklearn.metrics import roc_auc_score, accuracy_score, precision_score, f1_score, precision_recall_curve
 
 from fogvision import fogimageclass
 
@@ -26,7 +26,7 @@ class SiteEmbeddingDataset(Dataset):
         self.labels = []
         
         for fn in tqdm(image_fns, disable=disable_tqdm):
-            ImageClass = fogimageclass.FogImage(fn)
+            ImageClass = fogimageclass.FogImage(fn, crop_size=256)
             fog_val = ImageClass.fog_val  # 1 == fog, 0 == clear
             image_embedding = ImageClass.get_image_embedding(embedding_model=basemodel)
             
@@ -109,14 +109,46 @@ def evaluate(model, loader, device):
     }
 
 
-def finetune_and_evaluate(model, train_loader, test_loader, device, epochs=20, lr=1e-4):
-    """Fine-tune model and return eval metrics. Works on a copy so original is unchanged."""
+def find_optimal_threshold(model, calib_loader, device, objective='balanced'):
+    """Find threshold that maximises accuracy on a calibration set."""
+    model.eval()
+    all_labels, all_probs = [], []
+    with torch.no_grad():
+        for embeddings, labels in calib_loader:
+            outputs = model(embeddings.to(device))
+            probs = torch.softmax(outputs, dim=1)[:, 1]
+            all_labels.extend(labels.cpu().numpy())
+            all_probs.extend(probs.cpu().numpy())
+
+    all_labels, all_probs = np.array(all_labels), np.array(all_probs)
+    fpr, tpr, thresholds = roc_curve(all_labels, all_probs)
+    if objective == 'balanced':
+        # current: maximise tpr - fpr (Youden J)
+        idx = np.argmax(tpr - fpr)
+    elif objective == 'f1':
+        # maximise F1 directly
+        precision, recall, thresh = precision_recall_curve(all_labels, all_probs)
+        idx = np.argmax(2 * precision * recall / (precision + recall + 1e-8))
+        return float(thresh[idx])
+    
+    return float(thresholds[idx]) 
+
+
+def finetune_and_evaluate(model, train_loader, test_loader, device,
+                           epochs=20, lr=1e-3, layers_to_unfreeze='all', calib_loader=None):
     model = copy.deepcopy(model)
     model.to(device)
-    
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+
+    if layers_to_unfreeze == 'last_only':
+        for param in model.parameters():
+            param.requires_grad = False
+        for param in model.fc6.parameters():
+            param.requires_grad = True
+
+    optimizer = torch.optim.Adam(
+        filter(lambda p: p.requires_grad, model.parameters()), lr=lr)
     criterion = nn.CrossEntropyLoss()
-    
+
     model.train()
     for epoch in range(epochs):
         for embeddings, labels in train_loader:
@@ -125,6 +157,36 @@ def finetune_and_evaluate(model, train_loader, test_loader, device, epochs=20, l
             loss = criterion(model(embeddings), labels)
             loss.backward()
             optimizer.step()
-    
-    return evaluate(model, test_loader, device)
 
+    # Find optimal threshold from calibration set if provided, else use 0.5
+    threshold = find_optimal_threshold(model, calib_loader, device) if calib_loader else 0.5
+
+    return evaluate(model, test_loader, device, threshold=threshold)
+
+
+from sklearn.metrics import roc_curve
+
+
+def evaluate(model, loader, device, threshold=0.5):
+    model.eval()
+    all_labels, all_preds, all_probs = [], [], []
+    with torch.no_grad():
+        for embeddings, labels in loader:
+            embeddings, labels = embeddings.to(device), labels.to(device)
+            outputs = model(embeddings)
+            probs = torch.softmax(outputs, dim=1)[:, 1]
+            preds = (probs >= threshold).long()  # use threshold instead of argmax
+            all_labels.extend(labels.cpu().numpy())
+            all_preds.extend(preds.cpu().numpy())
+            all_probs.extend(probs.cpu().numpy())
+
+    all_labels = np.array(all_labels)
+    all_preds = np.array(all_preds)
+    all_probs = np.array(all_probs)
+
+    return {
+        'auroc':     roc_auc_score(all_labels, all_probs),
+        'accuracy':  accuracy_score(all_labels, all_preds),
+        'precision': precision_score(all_labels, all_preds, zero_division=0),
+        'f1':        f1_score(all_labels, all_preds, zero_division=0),
+    }
