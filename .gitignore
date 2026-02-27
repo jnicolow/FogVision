@@ -1,8 +1,9 @@
 data/working
+data/fine_tuning
+
 media/example_images
 *.gif
 
-data/fine_tuning
 
 
 # Byte-compiled / optimized / DLL files
