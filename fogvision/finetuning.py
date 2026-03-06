@@ -38,7 +38,7 @@ class SiteEmbeddingDataset(Dataset):
         # Convert to tensors once upfront rather than every __getitem__ call
         self.embeddings = torch.tensor(np.array(self.embeddings), dtype=torch.float32)
         self.labels = torch.tensor(self.labels, dtype=torch.long)
-        
+
         print(f"Loaded {len(self.labels)} images | "
               f"Fog: {self.labels.sum().item()} | "
               f"Clear: {(self.labels == 0).sum().item()}")

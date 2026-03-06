@@ -80,7 +80,7 @@ class FogImage(CamImage):
         if self.fog_val is None: 
             folder = os.path.basename(os.path.dirname(filepath))
             if 'clearOfFog'.lower() == folder.lower() or 'clear'.lower() == folder.lower(): self.fog_val = 0 # if the image is is a training folder for a class that means the fog val is known and can be used. Othersiwse it needs to be aquired with a model prediction
-            elif 'fog'.lower() == folder.lower(): self.fog_val = 1
+            elif 'fog'.lower() == folder.lower() or 'prollyfog'.lower() == folder.lower() or 'fog' in folder.lower(): self.fog_val = 1
 
         self.embedding = None # only used if embedding is need for multiple classifications (fog val and nocturnal or diurnal for example)
 
