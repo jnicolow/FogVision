@@ -12,15 +12,16 @@ FogVision can be installed either at the Python Package Index (PyPI) or through 
 ## Installation
 The source code can be found on GitHub at: https://github.com/jnicolow/FogVision/
 
-FogVision is installable at the Python Package Index (PyPI).
+FogVision is installable at the [Python Package Index (PyPI)](https://pypi.org/project/FogVision/).
 ```
 pip install fogvision
 ```
 
 ## Classify function
-When using FogVision, you can use the 'classify' function in a .ipynb file (Jupyter Notebook) to classify your images.
+When using FogVision, you can use the `classify` function in a .ipynb file (Jupyter Notebook) to classify your images.
 ```
 from fogvision import fv
+
 fv.classify(image_folder, plot_image=False, save_csv_to=None, sitename=None, crop_size=None, random_crop=False, threshold=0.5)
 ```
 Only *image_folder* is needed to run the function properly.
@@ -30,10 +31,9 @@ Only *image_folder* is needed to run the function properly.
 - **sitename**: Allows for manual setting of the site name.
 - **crop-size** (int): The side length (in pixels) of the square crop that is fed into the model. It controls how big the tensor is. If nothing is passed, then it chooses the largest square that fits in the image, rounded down to a multiple of 32.
 - **random-crop** (bool): If false, the center square is always taken. If true, then a randomly positioned square is taken. Default set to false.
-- **threshold** (int): By default, the threshold is 0.5. This means that if the inference value for the image is >= 0.5, then `fog_val` will be 1, but if it's less than 0.5, then `fog_val` will be 0. This option changes the threshold of the fog_val.
 
 ## CLI Tool
-FogVision can also be used in the command line using 'fogvision'. Since images cannot be plotted in a command line, the original *plot_image* parameter is not included and set to false by default.
+FogVision can also be used in the command line using `fogvision`. Since images cannot be plotted in a command line, the original *plot_image* parameter is not included and set to false by default.
 ```
 fogvision path/to/images
 
@@ -41,5 +41,4 @@ fogvision path/to/images
 --sitename
 --crop-size (int)
 --random-crop (bool)
---threshold (int)
 ```
