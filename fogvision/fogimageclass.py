@@ -65,7 +65,7 @@ class TopLeftCornerCrop:
     
 
 class FogImage(CamImage):
-    def __init__(self, filepath, nocturnal=None, fog_val=None, crop_size=None, device=None):
+    def __init__(self, filepath, nocturnal=None, fog_val=None, crop_size=None, device=None, decision_threshold:float=0.5):
         super().__init__(filepath)
         self.get_timestamp() # this will set self.timestamp and also returns it
         self.nocturnal = nocturnal # if 1 that means its a nocturnal image if 0 its not (meaning its diurnal)
@@ -76,6 +76,7 @@ class FogImage(CamImage):
                 self.get_is_nocturnal()
         
         self.fog_val = fog_val
+        self.decision_threshold = decision_threshold
 
         if self.fog_val is None: 
             folder = os.path.basename(os.path.dirname(filepath))
@@ -136,7 +137,7 @@ class FogImage(CamImage):
         #     probabilities = torch.sigmoid(logits)
         
         #     # Convert probabilities to binary prediction (0 or 1)
-        #     self.nocturnal = int((probabilities > 0.5).float())
+        #     self.nocturnal = int((probabilities > 0.5).float()) # this should not be the same decision threshold as for fog
 
         # if image is gray scale its a nocturnal image
         image_np = self.to_numpy()
@@ -271,7 +272,7 @@ class FogImage(CamImage):
                 self.probabilities = torch.softmax(logits, dim=1)[0] # NOTE if two output nodes use softmax not sigmoid
                 
                 # Convert probabilities to binary prediction (0 or 1)
-                self.fog_val = int((self.probabilities > 0.5).float())
+                self.fog_val = int((self.probabilities > self.decision_threshold).float())
 
         
         return self.fog_val
