@@ -333,7 +333,7 @@ class FogImage(CamImage):
 
             self.logits = logits
             self.probabilities = torch.tensor([1 - max_fog_prob, max_fog_prob])
-            self.fog_val = int(max_fog_prob > 0.5)
+            self.fog_val = int(max_fog_prob > self.decision_threshold)
             
             
             # print(int(torch.argmax(self.probabilities).item()))
