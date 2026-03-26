@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "FogVision"
-version = "0.1.2"
+version = "0.1.3"
 description = "Fog prediction from images using deep learning"
 authors = [{name = "Joel Nicolow"}]
 license = {file = "LICENSE"}
