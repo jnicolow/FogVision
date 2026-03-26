@@ -7,8 +7,6 @@ https://github.com/jnicolow/FogVision/commits/)
 
 FogVision is an open-source Python framework for classifying mountain trail camera imagery by fog presence. First, image embeddings are computed using a pretrained ResNet50 model, and then a classification head was trained on ~40k images from 30 sites (separate classification head for diurnal and nocturnal imagery).
 
-FogVision can be installed either at the Python Package Index (PyPI) or through the command line. It can then be utilized, either with Jupyter Notebook or from the command-line to perform inferences on images.
-
 ## Installation
 The source code can be found on GitHub at: https://github.com/jnicolow/FogVision/
 
@@ -25,7 +23,7 @@ from fogvision import fv
 fv.classify(image_folder, plot_image=False, save_csv_to=None, sitename=None, crop_size=None, random_crop=False, threshold=0.5)
 ```
 Only *image_folder* is needed to run the function properly.
-- **image_folder** (str): The folder path which contains the images to be classified.
+- **image_folder** (str): The path to the folder that contains the images to be classified.
 - **plot_image** (bool): Determines whether or not an image is plotted or not. Default set to false.
 - **save-csv-to** (str): Allows for a path to save the .csv file to, instead of the images folder.
 - **sitename**: Allows for manual setting of the site name.
@@ -36,11 +34,11 @@ Only *image_folder* is needed to run the function properly.
 ## CLI Tool
 FogVision can also be used in the command line using `fogvision`. Since images cannot be plotted in a command line, the original *plot_image* parameter is not included and set to false by default.
 ```
-fogvision path/to/images
+fogvision image_folder
 
---save-csv-to (str)
+--save-csv-to
 --sitename
---crop-size (int)
---random-crop (bool)
---threshold (int)
+--crop-size
+--random-crop
+--threshold
 ```
