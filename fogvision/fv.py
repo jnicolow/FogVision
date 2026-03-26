@@ -28,7 +28,7 @@ def load_head(filename, device):
         
 
 # main function to classify images in a folder
-def classify(image_folder, plot_image=False, save_csv_to=None, sitename=None, crop_size=None, random_crop=False):
+def classify(image_folder, plot_image=False, save_csv_to=None, sitename=None, crop_size=None, random_crop=False, threshold=0.5):
     # initialize embedder 
     basemodel = models.resnet50(pretrained=True)
 
@@ -67,12 +67,13 @@ def classify(image_folder, plot_image=False, save_csv_to=None, sitename=None, cr
     image_fns = glob(f"{imgfolder}", recursive=True)
 
     crop_size = crop_size # if crop size is None then it will take largest crop possible
+    threshold = threshold
     random_crop = random_crop
 
     results = []
 
     for fn in image_fns:
-        fog_img_class = fogimageclass.FogImage(filepath=fn, crop_size=crop_size)
+        fog_img_class = fogimageclass.FogImage(filepath=fn, crop_size=crop_size, decision_threshold=threshold)
         if fog_img_class.nocturnal:
             fog_img_class.get_fog_val(model=nocturnal_classif_head, embedding_model=basemodel, random_crop=random_crop) # NOTE only takes image embedding from 
             # fog_img_class.get_fog_val_multiple_regions(model=nocturnal_classif_head, embedding_model=basemodel) # NOTE not ideal for images with a lot of open sky works best on forested environments
@@ -135,6 +136,8 @@ def cli():
                         help="Square crop size; default is largest 32-divisible crop.")
     parser.add_argument("--random-crop", action="store_true", default=False,
                         help="Use random crop instead of center crop.")
+    parser.add_argument("--threshold", type=float, default=0.5,
+                        help="Decision threshold on fog probability (if you want to override).")
     args = parser.parse_args()
     
     classify(
@@ -144,4 +147,5 @@ def cli():
         sitename=args.sitename,
         crop_size=args.crop_size,
         random_crop=args.random_crop,
+        threshold=args.threshold
     )

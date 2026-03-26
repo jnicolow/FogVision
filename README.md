@@ -31,6 +31,7 @@ Only *image_folder* is needed to run the function properly.
 - **sitename**: Allows for manual setting of the site name.
 - **crop-size** (int): The side length (in pixels) of the square crop that is fed into the model. It controls how big the tensor is. If nothing is passed, then it chooses the largest square that fits in the image, rounded down to a multiple of 32.
 - **random-crop** (bool): If false, the center square is always taken. If true, then a randomly positioned square is taken. Default set to false.
+- **threshold** (int): By default, the threshold is 0.5. This means that if the inference value for the image is >= 0.5, then fog_val will be 1, but if it's less than 0.5, then fog_val will be 0. This option changes the threshold of the fog_val.
 
 ## CLI Tool
 FogVision can also be used in the command line using `fogvision`. Since images cannot be plotted in a command line, the original *plot_image* parameter is not included and set to false by default.
@@ -41,4 +42,5 @@ fogvision path/to/images
 --sitename
 --crop-size (int)
 --random-crop (bool)
+--threshold (int)
 ```

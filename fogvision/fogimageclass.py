@@ -259,7 +259,7 @@ class FogImage(CamImage):
 
                     self.logits = logits
                     # Convert probabilities to binary prediction (0 or 1)
-                    self.fog_val = int(torch.argmax(logits, dim=1).item())
+                    self.fog_val = int((self.probabilities[1] > self.decision_threshold).item())
             else:
                 # this would be an sklearn model
                 self.fog_val = model.predict(embedding)[0] # return is a list of len 1 (faster to predict all together most likely)
@@ -272,7 +272,7 @@ class FogImage(CamImage):
                 self.probabilities = torch.softmax(logits, dim=1)[0] # NOTE if two output nodes use softmax not sigmoid
                 
                 # Convert probabilities to binary prediction (0 or 1)
-                self.fog_val = int((self.probabilities > self.decision_threshold).float())
+                self.fog_val = int((self.probabilities[1] > self.decision_threshold).item())
 
         
         return self.fog_val
